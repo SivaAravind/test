@@ -3,16 +3,35 @@ run-name: ${{ github.actor }} is deploying 🚀
 on: [push]
 jobs:
   deploy:
+    # Runs on OS 
     runs-on: ubuntu-latest
+    # setup-node version
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+    # Steps in this job
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      # Setup deployment environment
+      - name: Setup deployment environment
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: aws-actions/setup-sam@v1
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Install Serverless Framework
+        run: npm install -g serverless
+      # Checkout the repo to the runner
       - name: Check out repository code
         uses: actions/checkout@v3
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
       - name: List files in the repository
         run: |
           ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+      - name: Install NPM dependencies
+        run: npm install
+      - name: Deploy to SLS to AWS
+        run: sls deploy --region ${{ secrets.AWS_REGION }} --stage ${{ github.ref_name }}
+
+
