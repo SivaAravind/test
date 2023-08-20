@@ -13,6 +13,7 @@ jobs:
     steps:
       # Setup deployment environment
       - name: Setup deployment environment
+        run: echo " Deployment Started... "
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
